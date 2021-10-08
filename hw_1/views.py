@@ -14,14 +14,24 @@ def movies_list_view(request):
 
 
 
-@api_view(['GET'])
+@api_view(['GET', 'PUT', 'DELETE'])
 def movies_item_view(request, pk):
     try:
         products = Product.objects.get(id=pk)
     except Product.DoesNotExist:
         return Response(data={'message': "Product not Found"}, status=status.HTTP_404_NOT_FOUND)
 
-    data = ProductListSerializer(products).data
+    if request.method == 'DELETE':
+        products.delete()
+        return Response(data={'massage': 'Product removed!!!'})
+    elif request.method == 'PUT':
+        products.title = request.data.get('title')
+        products.description = request.data.get('description')
+        products.price = request.data.get('price')
+        products.save()
+        return Response(data={'massage': 'Product updated',
+                              'products': ProductListSerializer(Product).data})
+    data = ProductListSerializer(products, many=False).data
     return Response(data=data)
 
 
