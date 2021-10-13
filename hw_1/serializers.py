@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from hw_1.models import Product, Tag, Review, Category
+from hw_1.models import *
+from rest_framework.exceptions import ValidationError
+
 
 
 
@@ -49,6 +51,13 @@ class ProductsActiveTagsListSerializer(serializers.ModelSerializer):
         tags =Tag.objects.filter(product=product).exclude(is_active=False)
         return TagListSerializer(tags, many=True).data
 
+
+class ProductCreateValidateSerializer(serializers.Serializer):
+    title = serializers.CharField(min_length=2, max_length=100)
+    description = serializers.CharField(min_length=10)
+    price = serializers.IntegerField()
+    category = serializers.IntegerField()
+    tags = serializers.ListField(child=serializers.IntegerField())
 
 
 

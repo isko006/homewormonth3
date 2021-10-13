@@ -1,15 +1,32 @@
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .serializers import ProductListSerializer, ProductsActiveTagsListSerializer, CategoryListSerializer, ProductsReviewListSerializer
+from .serializers import ProductListSerializer, ProductsActiveTagsListSerializer, CategoryListSerializer, ProductsReviewListSerializer, ProductCreateValidateSerializer
 from .models import Product, Category
 
 # Create your views here.
 
-@api_view(['GET'])
+@api_view(['GET', 'POST',])
 def movies_list_view(request):
+    if request.method == 'POST':
+        serializer = ProductCreateValidateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                data={'massage': 'error',
+                      'errors': serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE
+            )
+
+        title = request.data.get('title', '')
+        description = request.data.get('description', '')
+        price = request.data.get('price', 0)
+        product = Product.objects.create(title=title, description=description, price=price, )
+        product.save()
+        return Response(data={'massage': 'you created movie!',
+                              'movie': ProductListSerializer(product).data})
+
     product = Product.objects.all()
-    data =  ProductListSerializer(product, many=True).data
+    data = ProductListSerializer(product, many=True).data
     return Response(data=data)
 
 
@@ -25,6 +42,13 @@ def movies_item_view(request, pk):
         products.delete()
         return Response(data={'massage': 'Product removed!!!'})
     elif request.method == 'PUT':
+        serializer = ProductCreateValidateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                data={'massage': 'error',
+                      'errors': serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE
+            )
         products.title = request.data.get('title')
         products.description = request.data.get('description')
         products.price = request.data.get('price')
